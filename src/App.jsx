@@ -4,8 +4,16 @@ import TodoComputed from "./components/TodoComputed";
 import TodoCreate from "./components/TodoCreate";
 import TodoFilter from "./components/TodoFilter";
 import TodoList from "./components/TodoList";
+import { DragDropContext } from "@hello-pangea/dnd";
 
 const initialStateTodos = JSON.parse(localStorage.getItem("todos")) || [];
+
+const reorder = (list, startIndex, endIndex) => {
+  const result = [...list];
+  const [removed] = result.splice(startIndex,1);
+  result.splice(endIndex, 0 , removed);
+  return result;
+}
 
 const App = () => {
 
@@ -56,6 +64,16 @@ const App = () => {
     }
   }
 
+  const handleDragEnd = (result) => {
+    const { destination, source} = result;
+    if (!destination) return;
+    if(source.index === destination.index &&
+      source.droppableId === destination.droppableId)
+      return;
+
+      setTodos((prevTasks) => reorder(prevTasks, source.index, destination.index));
+  } 
+
   return (
     <div
       className="dark:bg-gray-900 dark:bg-[url('./assets/images/bg-mobile-dark.jpg')] min-h-screen
@@ -69,9 +87,10 @@ const App = () => {
         {/*TodoCreate*/}
        <TodoCreate createTodo={createTodo}></TodoCreate>
 
-        {/* TodoList (TodoItem) TodoUpdate & TodoDelete */}
-        <TodoList todos={filteredTodos()} removeTodo={removeTodo} updateTodo={updateTodo}></TodoList>
-
+        <DragDropContext onDragEnd={handleDragEnd}>
+          {/* TodoList (TodoItem) TodoUpdate & TodoDelete */}
+          <TodoList todos={filteredTodos()} removeTodo={removeTodo} updateTodo={updateTodo}></TodoList>
+        </DragDropContext>
         {/* TodoComputed */}
         <TodoComputed computedItemsLeft={computedItemsLeft} clearCompleted={clearCompleted}></TodoComputed>
 
